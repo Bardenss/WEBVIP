@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Web Compiler (HTML / CSS / JS)</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      background: #f4f4f4;
+    }
+    header {
+      background: #222;
+      color: #fff;
+      padding: 10px;
+      text-align: center;
+    }
+    .editors {
+      flex: 1;
+      display: flex;
+      gap: 5px;
+      padding: 5px;
+      box-sizing: border-box;
+    }
+    .editor {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+    .editor label {
+      background: #333;
+      color: #fff;
+      padding: 5px;
+      font-size: 14px;
+    }
+    textarea {
+      flex: 1;
+      resize: none;
+      font-family: monospace;
+      font-size: 14px;
+      padding: 10px;
+      border: none;
+      outline: none;
+    }
+    .actions {
+      padding: 10px;
+      text-align: center;
+      background: #eee;
+    }
+    button {
+      padding: 8px 15px;
+      font-size: 14px;
+      cursor: pointer;
+    }
+    iframe {
+      flex: 1;
+      border: none;
+      background: white;
+    }
+    .preview {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      border-left: 3px solid #ccc;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h2>🌐 Web Compiler (HTML + CSS + JS)</h2>
+  </header>
+
+  <div class="editors">
+    <div class="editor">
+      <label>HTML</label>
+      <textarea id="html" placeholder="Tulis HTML di sini...">&lt;h1&gt;Halo Dunia!&lt;/h1&gt;</textarea>
+    </div>
+    <div class="editor">
+      <label>CSS</label>
+      <textarea id="css" placeholder="Tulis CSS di sini...">h1 { color: red; text-align: center; }</textarea>
+    </div>
+    <div class="editor">
+      <label>JS</label>
+      <textarea id="js" placeholder="Tulis JS di sini...">console.log("Hello from JS");</textarea>
+    </div>
+    <div class="preview">
+      <label style="background:#333;color:#fff;padding:5px;">Preview</label>
+      <iframe id="output"></iframe>
+    </div>
+  </div>
+
+  <div class="actions">
+    <button onclick="compile()">▶ Run</button>
+    <button onclick="clearEditors()">🗑 Clear</button>
+  </div>
+
+  <script>
+    function compile() {
+      const html = document.getElementById("html").value;
+      const css = `<style>${document.getElementById("css").value}</style>`;
+      const js = `<script>${document.getElementById("js").value}<\/script>`;
+      const output = document.getElementById("output");
+
+      const result = html + css + js;
+      output.srcdoc = result;
+    }
+
+    function clearEditors() {
+      document.getElementById("html").value = "";
+      document.getElementById("css").value = "";
+      document.getElementById("js").value = "";
+      document.getElementById("output").srcdoc = "";
+    }
+
+    // Auto run on load
+    window.onload = compile;
+  </script>
+</body>
+</html>
