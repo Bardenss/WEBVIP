@@ -1,150 +1,246 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Web Compiler (HTML / CSS / JS)</title>
-  <style>
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      display: flex;
-      flex-direction: column;
-      height: 100vh;
-      background: #f4f4f4;
-    }
-    header {
-      background: #222;
-      color: #fff;
-      padding: 10px;
-      text-align: center;
-    }
-    .editors {
-      flex: 1;
-      display: flex;
-      gap: 5px;
-      padding: 5px;
-      box-sizing: border-box;
-    }
-    .editor {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-    }
-    .editor label {
-      background: #333;
-      color: #fff;
-      padding: 5px;
-      font-size: 14px;
-    }
-    textarea {
-      flex: 1;
-      resize: none;
-      font-family: monospace;
-      font-size: 14px;
-      padding: 10px;
-      border: none;
-      outline: none;
-    }
-    .actions {
-      padding: 10px;
-      text-align: center;
-      background: #eee;
-    }
-    button {
-      padding: 8px 15px;
-      font-size: 14px;
-      cursor: pointer;
-    }
-    iframe {
-      flex: 1;
-      border: none;
-      background: white;
-    }
-    .preview {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      border-left: 3px solid #ccc;
-    }
-  </style>
+<meta charset="UTF-8">
+<title>Login + Lua Script Editor</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  color: #f1f1f1;
+  margin: 0;
+  padding: 20px;
+  height: 100vh;
+  width: 100vw;
+  overflow-x: hidden;
+}
+
+#bg-blur {
+  position: fixed;
+  top: -50px; left: -50px; right: -50px; bottom: -50px; /* dilebarkan */
+  width: calc(100% + 100px);
+  height: calc(100% + 100px);
+  background: url("https://i.ibb.co.com/yngNcHqh/6-E4-ADC85-4832-4-A0-B-A4-A1-5-AA07-DC761-BD.png") center/cover no-repeat;
+  background-color: #000;
+  filter: blur(20px) brightness(0.8);
+  z-index: -3;
+}
+#particles-js { position: fixed; top:0; left:0; right:0; bottom:0; z-index:-2; width:100%; height:100%; }
+#particles-overlay { position: fixed; top:0; left:0; right:0; bottom:0; z-index:-1;
+  background: linear-gradient(135deg, rgba(30,30,47,0.7), rgba(17,17,17,0.7)); width:100%; height:100%;
+}
+
+h2 { color: #ffcc00; text-align: center; margin-bottom: 20px; text-shadow: 0 0 10px #ffcc00; }
+label { display: block; margin: 5px 0 3px; font-size: 14px; color: #ddd; }
+
+input {
+  padding: 10px; margin-bottom: 12px; width: 100%;
+  border-radius: 10px; border: 1px solid rgba(255,255,255,0.3);
+  background: rgba(255,255,255,0.15); backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px); color:#fff; font-size:14px;
+  box-shadow: inset 0 0 8px rgba(255,255,255,0.2);
+}
+input:focus { outline:none; background: rgba(255,255,255,0.25); box-shadow:0 0 12px rgba(255,255,255,0.3); }
+
+button {
+  margin-top:10px; padding:10px 16px; border:none; border-radius:12px;
+  cursor:pointer; font-size:14px; transition:0.3s ease;
+  position: relative; background: rgba(255,255,255,0.15);
+  border:1px solid rgba(255,255,255,0.3); backdrop-filter:blur(8px);
+  -webkit-backdrop-filter:blur(8px); color:#fff;
+  box-shadow: 0 4px 20px rgba(255,255,255,0.1), inset 0 0 10px rgba(255,255,255,0.15);
+  display:inline-flex; align-items:center; gap:8px; justify-content:center;
+}
+button:hover { transform: scale(1.05); background: rgba(255,255,255,0.25); box-shadow:0 6px 25px rgba(255,255,255,0.3), inset 0 0 15px rgba(255,255,255,0.2); }
+
+.track {
+  background: rgba(37,37,37,0.6); padding:15px; margin-top:12px; border-radius:10px;
+  box-shadow:0 3px 10px rgba(0,0,0,0.6); backdrop-filter:blur(6px);
+}
+
+textarea {
+  width:100%; height:350px; background:#111; color:#0f0; padding:12px;
+  border-radius:8px; margin-top:30px; font-size:14px; border:1px solid #333;
+}
+
+.button-group { margin-top:15px; }
+
+@media (max-width:768px) { body{padding:10px;} textarea{height:250px;font-size:12px;} input,button{font-size:12px;} }
+
+#loginPage, #editorPage { display:none; }
+
+#loginBox { max-width:400px; margin:100px auto; padding:20px; background: rgba(0,0,0,0.6);
+  border-radius:12px; box-shadow:0 0 20px rgba(0,0,0,0.8); position:relative; }
+#loginBox h2 { margin-bottom:15px; }
+
+.error { color:red; margin-top:10px; text-align:center; }
+
+.password-container { position:relative; }
+.toggle-eye { position:absolute; right:12px; top:35%; transform:translateY(-50%); cursor:pointer; user-select:none; }
+
+#logoutBtn { position:fixed; bottom:20px; right:20px; font-size:16px; padding:12px 16px; border-radius:50px; z-index:999; display:inline-flex; align-items:center; gap:6px; }
+
+#confirmBox { display:none; position:fixed; top:50%; left:50%; transform:translate(-50%, -50%);
+  background: rgba(0,0,0,0.85); padding:20px; border-radius:12px; text-align:center;
+  box-shadow:0 0 20px rgba(0,0,0,0.7); z-index:1000; }
+#confirmBox button { margin:8px; }
+
+img.inline-icon, img.btn-icon { display:inline-block; vertical-align:middle; height:18px; width:auto; }
+</style>
 </head>
 <body>
-  <header>
-    <h2>🌐 Web Compiler (HTML + CSS + JS)</h2>
-  </header>
+<div id="bg-blur"></div>
+<div id="particles-js"></div>
+<div id="particles-overlay"></div>
 
-  <div class="editors">
-    <div class="editor">
-      <label>HTML</label>
-      <textarea id="html" placeholder="Tulis HTML di sini..."></textarea>
+<!-- LOGIN PAGE -->
+<div id="loginPage">
+  <div id="loginBox">
+    <h2><img class="inline-icon" src="https://cdn-icons-png.flaticon.com/512/3293/3293466.png" alt=""> Login</h2>
+    <label>Username:</label>
+    <input type="text" id="loginUser">
+    <label>Password:</label>
+    <div class="password-container">
+      <input type="password" id="loginPass">
+      <span class="toggle-eye" onclick="togglePassword()">
+        <img class="inline-icon" id="eyeIcon" src="https://img.icons8.com/ios-glyphs/20/closed-eye.png"/>
+      </span>
     </div>
-    <div class="editor">
-      <label>CSS</label>
-      <textarea id="css" placeholder="Tulis CSS di sini..."></textarea>
-    </div>
-    <div class="editor">
-      <label>JS</label>
-      <textarea id="js" placeholder="Tulis JS di sini..."></textarea>
-    </div>
-    <div class="preview">
-      <label style="background:#333;color:#fff;padding:5px;">Preview</label>
-      <iframe id="output"></iframe>
-    </div>
+    <button onclick="doLogin()"><img class="btn-icon" src="https://cdn-icons-png.flaticon.com/512/1432/1432525.png"/> Login</button>
+    <div id="loginError" class="error"></div>
+  </div>
+</div>
+
+<!-- EDITOR PAGE -->
+<div id="editorPage">
+  <button id="logoutBtn" onclick="showConfirm()">
+    <img class="btn-icon" src="https://img.icons8.com/fluency/20/logout-rounded-left.png"/> Logout
+  </button>
+  <h2>Lua Script Editor</h2>
+
+  <label>Nama Script:</label>
+  <input type="text" id="scriptName" value="BANTAI GUNUNG">
+
+  <h3>Daftar Routes</h3>
+  <div id="routes"></div>
+  <button onclick="addRoute()"><img class="btn-icon" src="https://img.icons8.com/fluency/16/plus.png"/> Tambah Route</button>
+
+  <div class="button-group">
+    <button onclick="generate()"><img class="btn-icon" src="https://img.icons8.com/fluency/16/play.png"/> Generate Script</button>
+    <button onclick="copyCode()"><img class="btn-icon" src="https://img.icons8.com/fluency/16/copy.png"/> Copy Script</button>
   </div>
 
-  <div class="actions">
-    <button onclick="compile()">▶ Run</button>
-    <button onclick="clearEditors()">🗑 Clear</button>
-  </div>
+  <h3 style="margin-top:25px;">Hasil Script</h3>
+  <textarea id="output"></textarea>
+</div>
 
-  <script>
-    function compile() {
-      const html = document.getElementById("html").value;
-      const css = `<style>${document.getElementById("css").value}</style>`;
-      const js = `<script>${document.getElementById("js").value}<\/script>`;
-      const output = document.getElementById("output");
+<!-- POPUP KONFIRMASI -->
+<div id="confirmBox">
+  <p>Apakah kamu yakin ingin logout?</p>
+  <button onclick="doLogout()">Ya</button>
+  <button onclick="hideConfirm()">Batal</button>
+</div>
 
-      const result = html + css + js;
-      output.srcdoc = result;
+<script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
+<script>
+let routes = [ { name: "Track 1", link: "" } ];
+function renderRoutes() {
+  const container = document.getElementById("routes");
+  container.innerHTML = "";
+  routes.forEach((r,i)=>{
+    container.innerHTML+=`
+      <div class="track">
+        <label>Nama Track:</label>
+        <input type="text" value="${r.name}" onchange="updateName(${i}, this.value)">
+        <label>Link Track:</label>
+        <input type="text" value="${r.link}" onchange="updateLink(${i}, this.value)">
+      </div>`;
+  });
+}
+function updateName(i,val){routes[i].name=val;}
+function updateLink(i,val){routes[i].link=val;}
+function addRoute(){routes.push({name:"New Track", link:""}); renderRoutes();}
 
-      // simpan ke localStorage
-      localStorage.setItem("htmlCode", html);
-      localStorage.setItem("cssCode", document.getElementById("css").value);
-      localStorage.setItem("jsCode", document.getElementById("js").value);
-    }
+function generate(){
+  const name=document.getElementById("scriptName").value||"My Script";
+  let code=`-- SCRIPT OTOMATIS HASIL GENERATE\n`;
+  code+=`local Window = WindUI:CreateWindow({\n`;
+  code+=`    Title = "${name}",\n`;
+  code+=`    Icon = "lucide:mountain-snow",\n`;
+  code+=`})\n\nroutes = {\n`;
+  routes.forEach(r=>{code+=`    {"${r.name}", loadRoute("${r.link}")},\n`;});
+  code+=`}\n\n-- lanjutkan script kamu disini...\n`;
+  document.getElementById("output").value=code;
+}
 
-    function clearEditors() {
-      document.getElementById("html").value = "";
-      document.getElementById("css").value = "";
-      document.getElementById("js").value = "";
-      document.getElementById("output").srcdoc = "";
+function copyCode(){
+  const text=document.getElementById("output");
+  text.select(); text.setSelectionRange(0,99999);
+  document.execCommand("copy");
+  alert("Script berhasil dicopy!");
+}
 
-      // hapus dari localStorage
-      localStorage.removeItem("htmlCode");
-      localStorage.removeItem("cssCode");
-      localStorage.removeItem("jsCode");
-    }
+renderRoutes();
 
-    function loadSaved() {
-      const savedHtml = localStorage.getItem("htmlCode");
-      const savedCss = localStorage.getItem("cssCode");
-      const savedJs = localStorage.getItem("jsCode");
+// === LOGIN SYSTEM ===
+const GITHUB_JSON_URL="https://raw.githubusercontent.com/Bardenss/WEBVIP/main/Vip.json";
+const LOGIN_EXPIRY=2*24*60*60*1000; // 2 hari
 
-      if (savedHtml !== null) document.getElementById("html").value = savedHtml;
-      else document.getElementById("html").value = "<h1>Halo Dunia!</h1>";
+function showPage(page){
+  document.getElementById("loginPage").style.display=(page==="login")?"block":"none";
+  document.getElementById("editorPage").style.display=(page==="editor")?"block":"none";
+}
 
-      if (savedCss !== null) document.getElementById("css").value = savedCss;
-      else document.getElementById("css").value = "h1 { color: red; text-align: center; }";
+async function doLogin(){
+  const user=document.getElementById("loginUser").value.trim();
+  const pass=document.getElementById("loginPass").value.trim();
+  const errorBox=document.getElementById("loginError");
+  errorBox.textContent="";
+  try{
+    const res=await fetch(GITHUB_JSON_URL);
+    const data=await res.json();
+    const found=data.find(acc=>acc.username===user && acc.password===pass);
+    if(found){
+      const now=Date.now();
+      localStorage.setItem("loggedInUser",JSON.stringify({user,time:now}));
+      showPage("editor");
+    } else { errorBox.textContent="❌ Username atau password salah!"; }
+  } catch(e){ errorBox.textContent="⚠️ Gagal mengambil data akun!"; }
+}
 
-      if (savedJs !== null) document.getElementById("js").value = savedJs;
-      else document.getElementById("js").value = 'console.log("Hello from JS");';
-    }
+function showConfirm(){document.getElementById("confirmBox").style.display="block";}
+function hideConfirm(){document.getElementById("confirmBox").style.display="none";}
+function doLogout(){localStorage.removeItem("loggedInUser"); hideConfirm(); showPage("login");}
 
-    // Auto run on load
-    window.onload = function() {
-      loadSaved();
-      compile();
-    };
-  </script>
+const saved=localStorage.getItem("loggedInUser");
+if(saved){try{const parsed=JSON.parse(saved); if(Date.now()-parsed.time<LOGIN_EXPIRY){showPage("editor");} else { localStorage.removeItem("loggedInUser"); showPage("login"); } }catch{ showPage("login"); }} else { showPage("login"); }
+
+// Toggle password visibility dengan ganti ikon
+function togglePassword(){
+  const passInput=document.getElementById("loginPass");
+  const eyeIcon=document.getElementById("eyeIcon");
+  if(passInput.type==="password"){
+    passInput.type="text";
+    eyeIcon.src="https://img.icons8.com/ios-glyphs/20/visible.png";
+  } else {
+    passInput.type="password";
+    eyeIcon.src="https://img.icons8.com/ios-glyphs/20/closed-eye.png";
+  }
+}
+
+particlesJS("particles-js",{
+  "particles": {
+    "number": {"value":80},
+    "color":{"value":"#ffffff"},
+    "shape":{"type":"circle"},
+    "opacity":{"value":0.6},
+    "size":{"value":3},
+    "line_linked":{"enable":true,"distance":120,"color":"#ffffff","opacity":0.4,"width":1},
+    "move":{"enable":true,"speed":3}
+  },
+  "interactivity":{"events":{"onhover":{"enable":true,"mode":"repulse"},"onclick":{"enable":true,"mode":"push"}}},
+  "retina_detect":true
+});
+</script>
 </body>
 </html>
